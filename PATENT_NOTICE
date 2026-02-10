@@ -1,0 +1,63 @@
+PATENT NOTICE
+
+The algorithms and methods implemented in this software are covered by the
+following patent:
+
+  Title: Method Of Designing Ultra Compact Single Band Antennas
+  Inventors: Uday Khankhoje and Aggraj Gupta
+  Patent Number: Indian Patent No. 572928
+  Filed: 22 January 2024
+  Granted: 30 October 2025
+
+---
+
+COPYRIGHT LICENSE vs. PATENT LICENSE
+
+The MIT License (No Patent Grant) included in this repository grants you
+permission to use, modify, and distribute the SOURCE CODE under the terms
+specified in the LICENSE file.
+
+However, the copyright license does NOT include any license under the above
+patent(s). The patent covers the METHODS and ALGORITHMS implemented by the
+software, not merely the code itself.
+
+---
+
+USAGE REQUIREMENTS
+
+ACADEMIC AND RESEARCH USE:
+Academic researchers and non-commercial users are encouraged to use this
+software for research purposes. We request that you cite the relevant
+publications listed in the README.md file.
+
+COMMERCIAL AND INDUSTRIAL USE:
+Any use of the patented methods in commercial products, services, or industrial
+applications requires a separate patent license. This includes, but is not
+limited to:
+  - Integration into commercial antenna design tools or services
+  - Use in commercial product development workflows
+  - Deployment in industrial design or manufacturing processes
+  - Offering antenna design services based on these methods
+
+---
+
+OBTAINING A PATENT LICENSE
+
+For inquiries regarding commercial patent licensing, please contact:
+
+  Uday Khankhoje
+  Department of Electrical Engineering
+  Indian Institute of Technology Madras
+  Email: uday@ee.iitm.ac.in
+
+  Aggraj Gupta
+  Email: gupta.aggraj@gmail.com
+
+---
+
+DISCLAIMER
+
+This notice is provided for informational purposes. Users are responsible for
+ensuring their use complies with all applicable patent laws and regulations in
+their jurisdiction. The authors make no representations or warranties regarding
+the scope or enforceability of the patent(s) listed above.
