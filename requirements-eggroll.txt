@@ -1,0 +1,12 @@
+# Optional dependencies for EGGROLL hard-binary inverse training.
+#
+# HyperscaleES is GPL-3.0-only, so it is referenced as an external
+# dependency instead of being vendored into this MIT repository.
+git+https://github.com/ESHyperscale/HyperscaleES.git@b77f7d6f91238fd575313e946b9cad21e0a74b32
+
+jax
+jaxlib
+optax
+scipy
+matplotlib
+pytest

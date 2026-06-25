@@ -1,0 +1,27 @@
+universe = vanilla
+
+executable = run_pngf_es_smoke.sh
+arguments = $(Cluster) $(Process)
+
+log = pngf_es_smoke_$(Cluster)_$(Process).log
+output = pngf_es_smoke_$(Cluster)_$(Process).out
+error = pngf_es_smoke_$(Cluster)_$(Process).err
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = run_pngf_es_smoke.sh,pngf_npz_batch_scorer.py,make_pngf_smoke_dataset.py,pixelant_es_code.tar.gz,/home/hczupryna/pngf-fixed-batch-smoke/evaluate-fixed-design-batch,/home/hczupryna/pngf-fixed-batch-smoke/evaluate-fixed-design,/home/hczupryna/pngf-chtc/Gmat_sub_01.bin,/home/hczupryna/pngf-chtc/Gmat_sub_02.bin,/home/hczupryna/pngf-chtc/Gmat_sub_03.bin,/home/hczupryna/pngf-chtc/Gmat_sub_04.bin,/home/hczupryna/pngf-chtc/Gmat_sub_05.bin
+transfer_output_files = results_$(Cluster)_$(Process).tar.gz
+
+request_cpus = 12
+request_memory = 96GB
+request_disk = 20GB
+request_gpus = 1
++WantGPULab = true
++GPUJobLength = "medium"
+requirements = (HasCHTCSoftware == true) && (CUDACapability == 8.9) && regexp("gpu4005", Machine)
+
++JobBatchName = "pixelant-pngf-es-smoke"
++AccountingGroup = "fastmatch.hczupryna"
++ProjectName = "UWMadison_ECE_Liu"
+
+queue 1

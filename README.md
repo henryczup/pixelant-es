@@ -329,6 +329,126 @@ run('inverse_design_using_bpso_with_TLfwdmodel.m')
 - `output_new`: Predicted S₁₁ spectrum
 - Convergence plot and S₁₁ response plot
 
+### Use Case 6: EGGROLL Direct Antenna Search
+
+This path replaces direct GA/BPSO mask evolution with EGGROLL over a small neural generator:
+
+```text
+target spectrum + latent noise -> generator -> mask logits -> hard threshold -> scorer -> fitness
+```
+
+For the original 12x12 antenna case, this remains compatible with the frozen forward surrogate and optional ST-trained inverse warm start. For larger layouts such as 32x32, 64x64, multilayer metasurfaces, or future 3D encodings, use the CNN generator and provide a compatible scorer. This is the more compelling regime because the generator parameterizes a structured layout distribution while GA/BPSO must search the full binary mask space directly.
+
+Two scorer families are implemented:
+- `surrogate`: the frozen PyTorch/JAX forward surrogate.
+- `external-em`: a cached MATLAB Antenna Toolbox scorer for 12x12 hard masks.
+
+The external EM scorer has two modes:
+- `air`: faster exploratory solve, default 10-20 GHz grid.
+- `substrate`: slower FR-4 solve using the `generateantenna_scaled.m` defaults, default 1-5 GHz grid.
+
+The implementation uses the official HyperscaleES EGGROLL implementation as an external dependency, not vendored into this repository.
+
+Install the optional dependencies:
+
+```bash
+pip install -r requirements-eggroll.txt
+```
+
+Run a warm-started EGGROLL phase from an ST-trained inverse checkpoint:
+
+```bash
+python train_eggroll_inverse.py \
+  --spectra-mat antenna_dataset.mat \
+  --forward-checkpoint Forward_model_for_tandem.pth \
+  --inverse-checkpoint inverse_tandem_model.pth \
+  --output-dir eggroll_runs/warm_start \
+  --layout 12x12 \
+  --generator mlp \
+  --population-size 256 \
+  --steps 100 \
+  --rank 1 \
+  --lr 1e-3 \
+  --lambda-conn 0.1 \
+  --lambda-area 0.01 \
+  --lambda-frag 0.01 \
+  --lambda-rule 0.01
+```
+
+Run from scratch by omitting `--inverse-checkpoint`:
+
+```bash
+python train_eggroll_inverse.py \
+  --spectra-mat antenna_dataset.mat \
+  --forward-checkpoint Forward_model_for_tandem.pth \
+  --output-dir eggroll_runs/scratch \
+  --layout 12x12 \
+  --generator mlp \
+  --population-size 512 \
+  --steps 200 \
+  --rank 1 \
+  --sigma 0.2
+```
+
+Run the scalable direct-search path for a larger layout once a compatible scorer is available:
+
+```bash
+python train_eggroll_inverse.py \
+  --spectra-mat antenna_dataset.mat \
+  --forward-checkpoint Forward_model_32x32.pth \
+  --output-dir eggroll_runs/direct_32x32 \
+  --layout 32x32 \
+  --generator cnn \
+  --latent-dim 16 \
+  --population-size 512 \
+  --steps 200 \
+  --rank 1
+```
+
+Key generalized options:
+- `--layout HxW` selects the generated mask size, for example `12x12`, `32x32`, or `64x64`.
+- `--layers N` emits multilayer logits shaped `[batch, layers, height, width]`.
+- `--generator mlp|cnn` selects the legacy fully connected generator or spatial CNN generator.
+- `--latent-dim N` appends per-sample latent noise to the target spectrum before generation.
+- `--scorer surrogate|external-em` selects the frozen surrogate adapter or the future full-wave adapter contract.
+- `--solver-mode air|substrate` selects the MATLAB EM solver when `--scorer external-em` is used.
+- `--scorer-cache-dir PATH` caches MATLAB spectra by binary mask and solver configuration.
+
+Run hard-binary EGGROLL against the fast air EM scorer:
+
+```bash
+python train_eggroll_inverse.py \
+  --spectra-mat antenna_dataset.mat \
+  --scorer external-em \
+  --solver-mode air \
+  --scorer-work-dir . \
+  --scorer-cache-dir eggroll_runs/em_cache_air \
+  --output-dir eggroll_runs/eggroll_air_em \
+  --layout 12x12 \
+  --generator mlp \
+  --hidden-dims 64,64 \
+  --population-size 8 \
+  --steps 5 \
+  --rank 1 \
+  --sigma 0.1
+```
+
+Switch to the slower FR-4/substrate scorer by changing `--solver-mode substrate` and using a separate cache directory. Keep the initial population and step count small; each uncached population member launches a full-wave MATLAB solve.
+
+You can also call the MATLAB batch scorer directly:
+
+```matlab
+score_designs_em('input.mat', 'output.mat')
+```
+
+where `input.mat` contains `designs`, optional `freq`, and `solver_mode`; `output.mat` contains `s11_db`, `valid`, `error_message`, and `elapsed_seconds`.
+
+**Implementation details:**
+- Generator output is standardized as logits shaped `[batch, layers, height, width]` and converted with `(logits > 0)`; the smooth threshold activation is not used in this phase.
+- Feed-adjacent MATLAB pixels `X(6:7, 1)` are forced to metal after thresholding for the default 12x12 layout.
+- Antithetic perturbations use paired population members, so `--population-size` must be even.
+- The trainer writes `metrics.csv`, `best_design.png`, and portable inverse-generator `.npz` checkpoints under `--output-dir`.
+
 ---
 
 ## Example Results
